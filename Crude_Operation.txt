@@ -1,0 +1,217 @@
+using MyTestProject.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+using MyTestProject.Data_Context;
+using System.Data.Entity;
+
+namespace MyTestProject.Controllers
+{
+    public class User_CreationController : Controller
+    {
+        #region
+        private int session_user_id = 0;
+
+        private string session_user_name = "";
+        #endregion
+        public Boolean IsSesioonValid()
+        {
+
+            if (Session["session_user_name"] != null && Session["session_user_id"] != null)
+            {
+
+                session_user_id = Convert.ToInt32(Session["session_client_id"]);
+                session_user_name = Session["session_user_name"].ToString();
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        // GET: User_Creation
+        public ActionResult Index()
+        {
+                return View();
+        }
+        public ActionResult User_Creation_Partial_View()
+        {
+
+                return View();
+            
+        }
+        public ActionResult Report()
+        {
+
+
+            using (Db_Entities _db = new Db_Entities())
+            {
+                return View(_db.Sp_User_Creation().ToList());
+            }
+
+           
+        }
+        public ActionResult Edit(int id)
+        {
+            if (IsSesioonValid())
+            {
+                User_Creation_Model model;
+                using (Db_Entities _db = new Db_Entities())
+                {
+                    var data = new m_login();
+                    data = _db.m_login.Where(x => x.user_id == id).FirstOrDefault();
+
+                    model = new User_Creation_Model()
+                    {
+                        user_name = data.user_name,
+                        employee_name = data.employee_name,
+                        employee_email = data.employee_email,
+                        user_id = data.user_id,
+                        user_password = data.user_password
+
+                    };
+                }
+                return PartialView("index", model);
+            }
+            else
+            {
+                return RedirectToAction("index", "Login");
+            }
+
+          
+        }
+        public ActionResult Delete(int id)
+        {
+            if (IsSesioonValid())
+            {
+                using (Db_Entities _db = new Db_Entities())
+                {
+                    try
+                    {
+                        m_login objm_employee = new m_login()
+                        {
+                            user_id = id
+                        };
+
+                        _db.Entry(objm_employee).State = EntityState.Deleted;
+                        _db.SaveChanges();
+                        TempData["Delete"] = "Data Delete Sucessfully!";
+                    }
+                    catch (Exception ex)
+                    {
+                        throw ex;
+                    }
+
+
+                }
+            }
+            else
+            {
+                return RedirectToAction("index", "Login");
+            }
+            
+            return RedirectToAction("index");
+        }
+        public ActionResult SaveOrUpdate (User_Creation_Model model)
+        {
+
+            if (IsSesioonValid())
+            {
+                int _server_responce = 0;
+                using (Db_Entities _db = new Db_Entities())
+
+                {
+                    using (var transaction = _db.Database.BeginTransaction())
+                    {
+                        long user_id_add_update_check = model.user_id;
+                        try
+                        {
+                            if (user_id_add_update_check == 0)
+                            {
+                                m_login objm_employee = new m_login()
+                                {
+
+
+                                    employee_name = model.employee_name,
+                                    employee_email = model.employee_email,
+                                    user_name = model.user_name,
+                                    user_password = model.user_password,
+                                    created_date = System.DateTime.Now
+
+
+                                };
+                                _db.Entry(objm_employee).State = EntityState.Added;
+                                _server_responce = 1;
+                            }
+
+                            else
+                            {
+                                m_login objm_employee = new m_login()
+                                {
+
+                                    user_id = model.user_id,
+                                    employee_name = model.employee_name,
+                                    employee_email = model.employee_email,
+                                    user_name = model.user_name,
+                                    user_password = model.user_password,
+                                    updated_date = System.DateTime.Now
+
+
+                                };
+                                _db.Entry(objm_employee).State = EntityState.Modified;
+                                _server_responce = 2;
+                            }
+                            _db.SaveChanges();
+                        }
+                        catch (System.Data.Entity.Validation.DbEntityValidationException dbEx)
+                        {
+                            Exception raise = dbEx;
+                            foreach (var validationErrors in dbEx.EntityValidationErrors)
+                            {
+                                foreach (var validationError in validationErrors.ValidationErrors)
+                                {
+                                    string message = string.Format("{0}:{1}",
+                                        validationErrors.Entry.Entity.ToString(),
+                                        validationError.ErrorMessage);
+                                    raise = new InvalidOperationException(message, raise);
+                                }
+
+                            }
+                            _server_responce = 3;
+                        }
+                        finally
+                        {
+                            transaction.Commit();
+                            transaction.Dispose();
+                            _db.Database.Connection.Close();
+                        }
+                    }
+                    if (_server_responce == 1)
+                    {
+                        TempData["message"] = "Your Data Save Successfuly..";
+                    }
+                    else if (_server_responce == 2)
+                    {
+                        TempData["Update"] = "Your Data Update Successfuly";
+                    }
+                    else
+                    {
+                        TempData["Error"] = "Opps Somthing Wrong !!!";
+                    }
+                }
+                return RedirectToAction("index");
+            }
+            else
+            {
+                return RedirectToAction("index", "Login");
+            }
+          
+        }
+
+
+
+    }
+}
