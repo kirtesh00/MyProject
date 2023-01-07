@@ -1,0 +1,59 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+using System.Web.Security;
+using MyTestProject.Data_Context;
+using MyTestProject.Models;
+
+namespace MyTestProject.Controllers
+{
+    public class LoginController : Controller
+    {
+
+
+        Db_Entities _db;
+
+        public ActionResult Index(User_Creation_Model model)
+        {
+
+            return View();
+        }
+        public ActionResult Logout()
+        {
+            Session["session_user_id"] = null;
+            Session["session_user_name"] = null;
+
+            return RedirectToAction("Index", "Login");
+        }
+            [HttpPost]
+
+        public ActionResult LoginAuthandication(User_Creation_Model model)
+        {
+          
+
+            using (_db = new Db_Entities())
+            {
+                var authandication = new m_login();
+                authandication = _db.m_login.Where(x => x.user_name == model.user_name && x.user_password == model.user_password).FirstOrDefault();
+                if (authandication != null)
+                {
+
+
+                    Session.Add("session_user_id", authandication.user_id);
+                    Session.Add("session_user_name", authandication.user_name);
+
+
+                    FormsAuthentication.SetAuthCookie(authandication.user_name, false);
+                    return RedirectToAction("Index", "Home");
+                }
+                else
+                {
+                    TempData["Error"] = "Please check user name and password..";
+                    return RedirectToAction("Index");
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,56 @@
+using MyTestProject.Data_Context;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+
+namespace MyTestProject.Controllers
+{
+    public class HomeController : Controller
+    {
+        #region
+        private int session_user_id = 0;
+    
+        private string session_user_name = "";
+        #endregion
+        public Boolean IsSesioonValid()
+        {
+
+            if (Session["session_user_name"] != null && Session["session_user_id"] != null )
+            {
+
+                session_user_id = Convert.ToInt32(Session["session_client_id"]);
+                session_user_name = Session["session_user_name"].ToString();
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        public ActionResult Index()
+        {
+            if (IsSesioonValid())
+            {
+                TempData["session_user_name"] = session_user_name;
+                return View();
+            }
+            else
+            {
+                return RedirectToAction("index", "Login");
+            }
+            
+        }
+        public ActionResult Repo1t()
+        {
+            using (Db_Entities _db = new Db_Entities())
+            {
+
+                return View(_db.Sp_Account_holder().ToList());
+            }
+        }
+
+    }
+}
