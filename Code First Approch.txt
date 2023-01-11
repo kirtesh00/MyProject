@@ -1,0 +1,58 @@
+Project Selection=>
+Create New Project=>Asp.net Core WebAPI
+=>Project_Name=>Confugration for https =>unchek
+Package Installation
+Nuget Package Manager=>Right Click On Project Select=>
+Nuget Package Manager
+1)Entity Framework Core =>Select version=>Install
+2)Entity Framework Core Sqlserver =>Select version=>Install
+3Microsoft.EntityFrameworkCore.Design =>Select version=>Install
+4)Model class=>Design Properties
+---------Create Model Class--------------------
+1)Create New folder in project dir =>Model
+2)Create New class=>Right Click on folder =>Add Class=>Class Name
+3)Design Proprties
+4)Add Primary key=>Requried dll (using System.ComponentModel.DataAnnotations)
+-------------Create Context Class--------------------
+1)Create New folder in project dir=>Employee_Context
+2)Create New class=>Right Click on folder =>Add Class=>Class Name
+3)Create Base Class (DbContext)(Entity Framwork base class is DbContext)
+using Microsoft.EntityFrameworkCore;
+4)Intial context class in constructor
+public Db_Employee_Context(DbContextOptions<Db_Employee_Context> options):base(options)
+        {
+
+        }
+5)Create table using Dbset 
+ public DbSet<Employee_Model(Model name)> m_employee(Table name) { get; set; }
+
+----------------------Pass the connection string  Appsettings.json------------------------------
+1)Create connectstionstring Root
+2)Child =>Myconn
+--Connection string parameter
+1)Data Source=server name
+2)Initial Catalog =database name
+3)Persist Security Info=true //server Authandiation
+3)Integrated Security=true//Windows Authandication
+4)User ID=sa
+5)Password=Password
+  "Myconn": "Data Source=DESKTOP-EQOD21V; Initial Catalog=Batch_4_Core_Db;Persist Security Info=true;User ID=sa;Password=Game@123"
+-----------------------Configur Program.cs Connection string pass to context class--------------
+
+builder.Services.AddDbContext<Db_Employee_Context>(x =>
+{
+    x.UseSqlServer(builder.Configuration.GetConnectionString("Myconn"));
+});
+--------------------------Create Migration----------------------------
+1)Tools =>Nuget Package Manager =>Package Manager Consol
+PM>dotnet tool install --global dotnet-ef
+2)Check dir (dir commond)
+3)Change dir >Cd dir name
+4)Create Migrations => dotnet ef migrations add MyFirst_Migration(Value)
+5)database update
+ dotnet ef database update
+
+
+Program.cs=> Services Container 
+Appsettings.json=>Configruation File
+
