@@ -1,0 +1,106 @@
+ @model IEnumerable<Employee_Management.DataContext.TblEmpLogin> 
+<head>
+<script src="~/jquery-3.6.3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/downloadjs/1.4.8/download.min.js"></script>
+</head>
+
+<table class="table table-bordered" id="_table">
+    <thead>
+        <tr class="table-primary">
+            <th>Id</th>
+            <th>User Name</th>
+            <th>Password</th>
+        </tr>
+    </thead>
+
+ <tbody>
+        @{
+            int counter = 1;
+        }
+        @{
+            if(Model !=null)
+            foreach (var provider in Model)
+            {
+                                                                                           <tr>
+                                                                                                <td>
+                                                                                                <input type="checkbox" id="checkboxId" name="_checkId" value="@provider.Id"/>
+                                                                                                    @(counter++) 
+                                                                                                    <input type="hidden" value="@provider.Id" name="Id" />
+                                                                                                </td>
+                                                                                                <td>@provider.UseerName</td>
+
+                                                                                                <td> @provider.Password</td>  
+                                                                                            </tr>
+            }
+            else
+            {
+                         <tr>    
+                         <td rowspan="2">No Data Found</td>
+                         </tr>
+            }
+        }
+    </tbody>
+
+</table>
+<div class="">
+    <div class="text-right mb-3">
+         <button class="btn btn-danger"  type="submit" id="_btnDelete">
+          Delete
+        </button> 
+    </div>
+</div>
+
+                    <div>
+                        <script type="text/javascript">
+                            $(document).ready(function(){
+
+                                $('#_btnDelete').click(function(){
+                                    debugger; 
+                                    if (confirm("are you Sure to Delete this?")) {
+
+                                        var ids = [];
+                                        $(':checkbox:checked').each(function(i) {
+
+                                            ids[i] = $(this).val();
+                                        });
+                                        if (ids.length == 0) {
+                                            alert("Please select atleast one checkbox");
+                                        }
+                                        else {
+                                            $.ajax({
+                                              type: 'POST',
+                                              url: '/Employee/Delete',
+                                              data: { ids: ids },
+                                                success: function(){
+                                                    alert("Deleted Successfully");
+                                                } 
+                                           });
+                                        }
+                                    } else {
+                                        return false;
+                                    }
+
+                                });
+                            }); 
+                        </script> 
+                    </div>
+
+
+
+
+
+----------Controller----------
+
+ public async Task<IActionResult> delete(int[] Ids)
+        {
+            using (Employee_Management_DbContext context = new Employee_Management_DbContext())
+            {
+                for (int i = 0; i < Ids.Length; i++)
+                {
+                    var data = context.TblEmpLogins.Where(x => x.Id == Ids[i]).FirstOrDefault();
+                    context.TblEmpLogins.Remove(data);
+                }
+                await context.SaveChangesAsync();
+                return Json("Data Deleted successfully");
+            }
+        }
