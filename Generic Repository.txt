@@ -1,0 +1,247 @@
+ Generic Repository and create project on generic repository pattern
+
+Step1:Create model dir Code Like:
+ namespace APiDemo5.Models
+{
+    public class WorkerInfo
+    {
+        public int Id { get; set; }
+
+        public String  ?WorkerName { get; set; }
+    }
+}
+
+-------------------------------------------------------------
+Step2:Create dir for Dto:
+enum code like:     namespace APiDemo5.Dto_msg
+{
+    public enum StatusEnum
+    {
+        Success=200,
+        PageNotFound=404,
+        BadRequest=400,
+
+    }
+}
+
+
+Statusmessage.cs code like:
+namespace APiDemo5.Dto_msg
+{
+    public class StstusMessage
+    {
+        public string? Status { get; set; }
+
+        public string?  Message { get; set; }
+    }
+}
+------------------------------------------------------------------
+step3:create Api control fo request and response code :
+
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using APiDemo5.Generic_Repository;
+using APiDemo5.Dto_msg;
+using APiDemo5.DataContext;
+
+namespace APiDemo5.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class WorkerController : ControllerBase
+    {
+        StstusMessage StstusMessage;
+
+        private readonly IWorkerRepositorye<WorkerInfoTable> workerRepo;
+
+        public WorkerController()
+        {
+            workerRepo = new WorkerRepository<WorkerInfoTable>();
+        }
+
+        [HttpGet("AllWorkers")]
+        public async Task<List<WorkerInfoTable>> GetWorkerList() => await workerRepo.GetAll();
+
+        [HttpGet("Workers/{id}")]
+        public async Task<WorkerInfoTable> GetWorkerName(int id) => await workerRepo.GetById(id);
+
+        [HttpPost("WorkersSave")]
+        [ProducesResponseType(typeof(StstusMessage), 404)]
+        [ProducesResponseType(typeof(StstusMessage), 400)]
+        [ProducesResponseType(typeof(StstusMessage), 200)]
+
+        public IActionResult Save(WorkerInfoTable table)
+        {
+            StstusMessage responce = new StstusMessage();
+            try
+            {
+                WorkerInfoTable table1 = new WorkerInfoTable()
+                {
+                    Id = table.Id,
+                    WorkerName = table.WorkerName,
+                };
+
+                if (table.WorkerName == "")
+                {
+                    responce.Status = StatusEnum.PageNotFound.ToString();
+                    responce.Message = "Worker name is empty, please enter worker name.";
+                    return NotFound(responce);
+                }
+
+                workerRepo.Insert(table);
+                workerRepo.Save();
+
+                responce.Status = StatusEnum.Success.ToString();
+                responce.Message = $"{table1.WorkerName} added successfully.";
+                return Ok(responce);
+
+            }
+            catch (Exception ex)
+            {
+                responce.Status = StatusEnum.BadRequest.ToString();
+                responce.Message = $"Invalid Value. Exception : {ex.Message}";
+                return BadRequest(responce);
+            }
+             
+        }
+
+        [HttpDelete("Delete")]
+        [ProducesResponseType(typeof(StstusMessage),404)]
+        [ProducesResponseType(typeof(StstusMessage),400)]
+        [ProducesResponseType(typeof(StstusMessage),200)]
+        public IActionResult Delete(int id)
+        {
+            StstusMessage responce = new StstusMessage();
+            try
+            {
+                if(id == 0)
+                {
+                    responce.Status = StatusEnum.PageNotFound.ToString();
+                    responce.Message = "data not deleted!";
+                    return NotFound(responce);
+                } 
+
+                    workerRepo.Delete(id);
+                    workerRepo.Save();
+                    
+                    responce.Status= StatusEnum.Success.ToString();
+                    responce.Message = "data  deleted!";
+                    return Ok(responce); 
+
+            }
+            catch (Exception ex)
+            {
+                responce.Status=StatusEnum.BadRequest.ToString();
+                responce.Message = $"Invalid Id. Exception :{ex.Message}";
+                return BadRequest(responce);
+            }
+            
+
+        }
+
+        [HttpPut("Update")]
+        public IActionResult Update(WorkerInfoTable table)
+        {
+            StstusMessage ststusMessage = new StstusMessage();
+            try
+            {
+                if(table.Id == 0)
+                {
+                    ststusMessage.Status = StatusEnum.PageNotFound.ToString();
+                    ststusMessage.Message = "data not updated";
+                    return NotFound(ststusMessage);
+                }
+                workerRepo.Update(table);
+                workerRepo.Save();
+
+                ststusMessage.Status= StatusEnum.Success.ToString();
+                ststusMessage.Status = "data successfully Updated";
+                return Ok(ststusMessage);
+            }
+            catch(Exception ex)
+            {
+                ststusMessage.Status= StatusEnum.BadRequest.ToString();
+                ststusMessage.Message = $"Insert Id. Exception : {ex.Message}";
+                return BadRequest(ststusMessage);
+            }
+        
+            
+        }
+    }
+}
+--------------------------------------------------------------------------------------------
+Step4: create Generic_ repository dir:
+1)create interface-IWorkerRepositorye code :
+namespace APiDemo5.Generic_Repository
+{
+    public interface IWorkerRepositorye<T> where T : class
+    {
+        Task<T> GetById(int id);
+
+        Task<List<T>> GetAll();
+
+        void Delete(int id);
+
+        void Update(T entity);
+
+        void Insert(T entity);
+
+        void Save();
+
+    }
+}
+
+2)create class:workerrepository.cs code:
+
+using APiDemo5.DataContext;
+using Microsoft.EntityFrameworkCore;
+
+namespace APiDemo5.Generic_Repository
+{
+    public class WorkerRepository<T> : IWorkerRepositorye<T> where T : class
+    {
+        private readonly Employee_Db1Context context;
+
+        private DbSet<T> table = null;
+
+        public WorkerRepository()
+        {
+            context = new Employee_Db1Context();
+
+            table =context.Set<T>();
+        }
+
+        public void Delete(int id)
+        {
+            var data = table.Find(id);
+            table.Remove(data);
+        }
+
+        public async Task<List<T>> GetAll()
+        {
+            return await table.ToListAsync();
+        }
+
+        public async Task<T> GetById(int id)
+        {
+            return await table.FindAsync(id);
+        }
+
+        public void Insert(T entity)
+        {
+              table.Add(entity);
+        }
+
+        public void Save()
+        {
+            context.SaveChanges();
+        }
+
+        public void Update(T entity)
+        {
+             table.Update(entity);
+        }
+    }
+}
+
+Step5:If we want to use Interface:-Create Interface.cs->write Unimplemented methods(without accessmodifier)->inherite interface to repository.cs-> go to program.cs->builder.Services.AddScoped<IStudentcs, StudentRepository>();
