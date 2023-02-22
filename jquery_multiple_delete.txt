@@ -1,4 +1,4 @@
- @model IEnumerable<Employee_Management.DataContext.TblUserDatum>
+@model IEnumerable<Employee_Management.DataContext.TblUserDatum>
 <head>
     @*<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
     *@
@@ -9,12 +9,19 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" crossorigin="anonymous">
     <script src="jquery.toaster.js"></script>
 </head>
-@*<style>
-    .row{
+<style>
+    /*    .row{
 
-        margin-top:60px
+                            margin-top:60px
+                        }*/
+    .loder_pr {
+        display: flex, justify-content:center, align-item:center
     }
-</style>*@
+
+    .loder {
+        position: relative, bottom:500px, left:500px,
+    }
+</style>
 @*-----------Buttons-----------*@
 <div class="row" style=" margin-top:30px">
     <div class="text-right col-md-1">
@@ -28,15 +35,16 @@
 </div>
 
 <div class="input-group">
-    <input type="search" class="form-control align-content-lg-center" placeholder=" " aria-label="Search" aria-describedby="search-addon" />
-    <button type="button" id="_searchbtn" class="btn btn-outline-primary" data-mdb-toggle="tooltip" data-mdb-placement="top" title="Seach here">search</button>
+    <input type="search" class="form-control align-content-lg-center" placeholder="Search Here" aria-label="Search" aria-describedby="search-addon" id="myInput" />
+    @*    <button type="button" id="_searchbtn" class="btn btn-outline-primary" data-mdb-toggle="tooltip" data-mdb-placement="top" title="Seach here">search</button>
+    *@
 </div>
 @*-----------Buttons end----------*@
 <div style=" margin-top:30px">
     <table class="table table-hover" id="_table">
 
         <thead>
-            <tr class="table-primary">
+            <tr class="table-primary" id="_trId">
                 <th width="10%"><input type="checkbox" id="ckbCheckAll" name="checkboxname" class="checkBoxClass" /></th>
                 <th>Id</th>
                 <th>First Name</th>
@@ -88,8 +96,9 @@
     </table>
 
 </div>
+
 @*----AddorEdit PopUp----*@
-<div class="modal fade" id="modelshow" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade loder_pr" id="modelshow" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -106,18 +115,23 @@
                     <label>ID</label>
                     <input type="hidden" class="form-control" Id="hidden_id" />
                 </div>
+
                 <div>
                     <label>First Name</label>
                     <input type="text" class="form-control" id="_FirstName" name="_firstName" placeholder="" />
+                    <span class="text-danger" id="span_FirstName">enter name</span>
                 </div>
+
                 <div>
                     <label>Middle Name</label>
                     <input type="text" class="form-control" id="_middleName" name="_MiddleName" placeholder="" />
                 </div>
+
                 <div>
                     <label>Last Name</label>
                     <input type="text" class="form-control" id="_LastName" name="lastName" placeholder="" />
                 </div>
+
                 <div>
                     <label>Gender</label>
                     <input type="radio" class="gender" name="Gender" id="_gender" value="male"> Male <input type="radio" class="gender" name="Gender" id="gender" value="female"> Female
@@ -149,9 +163,14 @@
             </div>
 
         </div>
+        <div id="loadingGif"><img src="~/loading-loading-forever.gif" class="center"></div>
 
 
     </div>
+
+
+
+
 </div>
 
 
@@ -247,17 +266,10 @@
                             alert('data not found');
                         }
                     });
-                });
-
-
-
-
+                }); 
 
         });
-
-
-
-
+         
 
     </script>
 </div>
@@ -297,15 +309,14 @@
                     url: '/SignUp/UpdateUser',
                     data: Data,
                     success: function() {
-                        location.reload();
+                        $('#loadingGif').show();
+
                     }
                 });
             });
         });
     </script>
 </div>
-
-
 
 
 @*modal popup with add user*@
@@ -333,7 +344,7 @@
                 var FirstName = $('#_FirstName').val();
                 var MiddleName = $('#_middleName').val();
                 var LastName = $('#_LastName').val();
-                var Gender = $('input[name=Gender]:checked').attr('value'); 
+                var Gender = $('input[name=Gender]:checked').attr('value');
                 var Email = $('#_email').val();
                 var BirthDate = $('#_birthdate').val();
                 var MobileNo = $('#_mobileNo').val();
@@ -353,6 +364,10 @@
                     url: '/SignUp/AddNewUser',
                     data: Data,
                     success: function() {
+                        $(window).load(function() {
+                            $("#spinner").fadeOut("slow");
+                        });
+
                         location.reload();
                     }
                 });
@@ -361,6 +376,41 @@
         });
     </script>
 </div>
+
+<div>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#_save').click(function() {
+                var FirstName = $('#_FirstName').val();
+                var MiddleName = $('#_middleName').val();
+                var LastName = $('#_LastName').val();
+                var Gender = $('input[name=Gender]:checked').attr('value');
+                var Email = $('#_email').val();
+                var BirthDate = $('#_birthdate').val();
+                var MobileNo = $('#_mobileNo').val();
+                var password = $('#_password').val();
+
+            });
+        });
+    </script>
+</div>
+
+@*--------SearchBox--------*@
+
+<div>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#myInput').on("keyup", function() {
+                debugger;
+                var value = $(this).val().toLowerCase();
+                $("#_table tr").filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+        });
+    </script>
+</div>
+
 
 
 
